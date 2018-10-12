@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+if [ ! $# == 2 ] # $# is the number of command line arguments. This script takes exactly 2 arguments
+then
+    scriptname=`basename "$0"` # $0 is the full path to the script, basename takes just the filename part
+    echo "usage: $scriptname name path" # Print usage if the number of arguments isn't correct.
+    exit 1 # Exit
+fi
+
+# Figure out if we can use wget. If not, try curl.
+if command -v wget > /dev/null 2>&1
+then
+    dlcmd='wget -O - -q'
+elif command -v curl > /dev/null 2>&1
+then
+    dlcmd='curl -s'
+fi   
+
+# Figure out if we can use tree. If not, try find. If not, try ls. If not, give up.
+if command -v tree > /dev/null 2>&1
+then
+    treecmd='tree -a -I .git'
+elif command -v find > /dev/null 2>&1
+then
+    treecmd='find -not -path *.git*'
+elif command -v ls > /dev/null 2>&1
+then
+    # This should never happen. Find kinda has to exist.
+    treecmd='ls -RA --ignore .git'
+fi
+
+name=$1 # $1 is the project name (first argument)
+path=$2 # $2 is location of the project directory (second argument)
+
+mkdir -p $path/$name/code/{analysis,scripts,src,bin} # Curly brackets are similar to globs, except they can fail
+mkdir -p $path/$name/output/{reports,tables,figures}
+mkdir -p $path/$name/data/{raw,processed}
+find $path/$name -type d -exec touch {}/README.md \; # Using the find program with the exec option
+mkdir -p $path/$name/tmp
+
+echo "Project $name created at $path.
+"
+
+if [ ! -z "$treecmd" ]
+then
+    echo -e "Displaying the contents of $path/$name:\n"
+    $treecmd $path/$name
+else
+    # This should never happen.
+    echo -e "Can't display the contents of $path/$name. Skipping.\n"
+fi
+
+cd $path/$name
+touch .gitignore
+
+if [ ! -z "$dlcmd" ]
+then
+    gitig_url=https://raw.githubusercontent.com/github/gitignore/master
+    gitig_global_url=$gitig_url/Global
+    echo -e "\nDownloading default .gitignore definitions."
+
+    { echo -e "## C files\n"; $dlcmd $gitig_url/C.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## C++ files\n"; $dlcmd $gitig_url/C%2B%2B.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## Perl files\n"; $dlcmd $gitig_url/Perl.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## Python files\n"; $dlcmd $gitig_url/Python.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## R files\n"; $dlcmd $gitig_url/R.gitignore; echo -e "\n"; } >> .gitignore
+
+    { echo -e "## Emacs files\n"; $dlcmd $gitig_global_url/Emacs.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## Vim files\n"; $dlcmd $gitig_global_url/Vim.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## Linux files\n"; $dlcmd $gitig_global_url/Linux.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## Windows files\n"; $dlcmd $gitig_global_url/Windows.gitignore; echo -e "\n"; } >> .gitignore
+    { echo -e "## macOS files\n"; $dlcmd $gitig_global_url/macOS.gitignore; echo -e "\n"; } >> .gitignore
+
+    echo -e "Finished downloading default .gitignore definitions.\n"
+else
+    echo -e "\nCan't download default .gitignore definitions. Skipping."
+fi
+
+echo -e "\n## Project Specific Files\n\ndata/*\ndata/raw/*\ndata/processed/*\ntmp/*\ncode/bin/*" >> .gitignore
+echo -e "\n!data/\n!data/raw/\n!data/processed/\n!code/bin/\n!.gitignore" >> .gitignore
+#find . -type f \( -path "*data*" -or -path "*code/bin*" \) -name README.md -printf '%P\n' | awk ' { print "!" $0 } ' >> .gitignore
+find . -type f \( -path "*data*" -or -path "*code/bin*" \) -name README.md | sed 's/^\.\//!/' | sort -g >> .gitignore
+
+if command -v git > /dev/null 2>&1
+then
+    git init -q
+    git add . 2>&1 > /dev/null
+    git commit -m "Initial project creation and commit." -q
+    echo -e "\nCreated a git repository with the project directory."
+else
+    echo -e "\nCan't locate git. This project directory will not be turned into a git repository."
+fi
