@@ -1,3 +1,3 @@
-f = open('ecoli.fna')
+f = open('hw1.fna')
 print(len(f.readlines()))
 f.close()
