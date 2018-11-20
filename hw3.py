@@ -2,10 +2,11 @@
 
 
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-
+matplotlib.use('GTK3Cairo')
 
 #open quickmerge file and read it.
 file1 = open('quickmergelength.txt')
