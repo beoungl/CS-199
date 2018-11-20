@@ -3,10 +3,11 @@
 
 import pandas as pd
 import matplotlib
+
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-matplotlib.use('Agg')
 
 #open quickmerge file and read it.
 file1 = open('quickmergelength.txt')
