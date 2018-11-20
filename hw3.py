@@ -1,3 +1,4 @@
+
 #Run this for the graphs
 #hw3remote.py is to be run in the remote environment.
 
@@ -54,7 +55,7 @@ plt.xlim(xmin= 0)
 plt.show()
 
 #Histogram for the value above n90
-histogram_plot1 = sns.distplot(contig_n90.iloc[:17], bins = 20, kde = False, axlabel = 'Base Pair Lengths', norm_hist = False, )
+histogram_plot1 = sns.distplot(contig_n90.iloc[:17], bins = 20, kde = False, axlabel = 'Base Pair Lengths(in 10Mbs)', norm_hist = False, )
 histogram_plot1.set_title('Distribution of Quickmerrge 2x Bionano Assembly, bp > 6001105')
 histogram_plot1.set_ylabel('Counts')
 plt.xlim(xmin = 0)
